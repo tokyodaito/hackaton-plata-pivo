@@ -54,7 +54,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                 CryptoApp(
                     repository = repository,
                     showBeerOverlay = showBeerOverlay,
-                    onBeerOverlayFinished = { beerOverlayState.value = false }
+                    onBeerOverlayFinished = { beerOverlayState.value = false },
+                    onBeerOverlayRequested = ::triggerBeerOverlay
                 )
             }
         }
@@ -122,7 +123,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 fun CryptoApp(
     repository: CryptoRepository,
     showBeerOverlay: Boolean,
-    onBeerOverlayFinished: () -> Unit
+    onBeerOverlayFinished: () -> Unit,
+    onBeerOverlayRequested: () -> Unit
 ) {
     var selectedCrypto by remember { mutableStateOf<Crypto?>(null) }
 
@@ -132,7 +134,8 @@ fun CryptoApp(
                 repository = repository,
                 onCryptoClick = { crypto ->
                     selectedCrypto = crypto
-                }
+                },
+                onBeerOverlayRequested = onBeerOverlayRequested
             )
         } else {
             CryptoDetailScreen(

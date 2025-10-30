@@ -21,7 +21,8 @@ import diftech.hackathon.ui.components.LiquidGlassBackground
 @Composable
 fun CryptoListScreen(
     repository: CryptoRepository,
-    onCryptoClick: (Crypto) -> Unit
+    onCryptoClick: (Crypto) -> Unit,
+    onBeerOverlayRequested: () -> Unit
 ) {
     val cryptoList by repository.cryptoListFlow.collectAsState()
     var isLoading by remember { mutableStateOf(true) }
@@ -40,6 +41,7 @@ fun CryptoListScreen(
                     title = {
                         Text(
                             text = "Криптовалюты",
+                            modifier = Modifier.clickable(onClick = onBeerOverlayRequested),
                             color = Color.White,
                             fontWeight = FontWeight.Bold
                         )
