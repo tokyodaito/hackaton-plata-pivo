@@ -1,11 +1,9 @@
 package diftech.hackathon.ui.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,58 +14,86 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import diftech.hackathon.data.model.Crypto
 import diftech.hackathon.data.repository.CryptoRepository
-import diftech.hackathon.data.repository.MockCryptoRepository
-import kotlinx.coroutines.launch
+import diftech.hackathon.ui.components.GlassCard
+import diftech.hackathon.ui.components.LiquidGlassBackground
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CryptoListScreen(
-    repository: CryptoRepository = MockCryptoRepository(),
+    repository: CryptoRepository,
     onCryptoClick: (Crypto) -> Unit
 ) {
     val cryptoList by repository.cryptoListFlow.collectAsState()
     var isLoading by remember { mutableStateOf(true) }
-    val scope = rememberCoroutineScope()
-    
+
     LaunchedEffect(Unit) {
-        scope.launch {
-            repository.getCryptoList()
-            isLoading = false
-        }
+        runCatching { repository.getCryptoList() }
+            .onFailure { it.printStackTrace() }
+        isLoading = false
     }
     
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Криптовалюты") }
-            )
-        }
-    ) { padding ->
-        if (isLoading && cryptoList.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+    LiquidGlassBackground {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Криптовалюты",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = Color.White,
+                        navigationIconContentColor = Color.White,
+                        actionIconContentColor = Color.White
+                    )
+                )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                item { Spacer(modifier = Modifier.height(8.dp)) }
-                
-                items(cryptoList) { crypto ->
-                    CryptoListItem(
-                        crypto = crypto,
-                        onClick = { onCryptoClick(crypto) }
+        ) { padding ->
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color.White.copy(alpha = 0.8f))
+                }
+            } else if (cryptoList.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Не удалось загрузить данные",
+                        color = Color.White.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
-                
-                item { Spacer(modifier = Modifier.height(8.dp)) }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item { Spacer(modifier = Modifier.height(8.dp)) }
+
+                    items(cryptoList) { crypto ->
+                        CryptoListItem(
+                            crypto = crypto,
+                            onClick = { onCryptoClick(crypto) }
+                        )
+                    }
+
+                    item { Spacer(modifier = Modifier.height(8.dp)) }
+                }
             }
         }
     }
@@ -78,17 +104,14 @@ fun CryptoListItem(
     crypto: Crypto,
     onClick: () -> Unit
 ) {
-    Card(
+    GlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -96,25 +119,27 @@ fun CryptoListItem(
                 Text(
                     text = crypto.name,
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
                 Text(
                     text = crypto.symbol,
                     fontSize = 14.sp,
-                    color = Color.Gray
+                    color = Color.White.copy(alpha = 0.6f)
                 )
             }
-            
+
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "$${String.format("%.2f", crypto.currentPrice)}",
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
                 )
-                
-                val changeColor = if (crypto.priceChangePercent24h >= 0) Color(0xFF4CAF50) else Color(0xFFE53935)
+
+                val changeColor = if (crypto.priceChangePercent24h >= 0) Color(0xFF5AF78E) else Color(0xFFFF6B7A)
                 val changePrefix = if (crypto.priceChangePercent24h >= 0) "+" else ""
-                
+
                 Text(
                     text = "$changePrefix${String.format("%.2f", crypto.priceChangePercent24h)}%",
                     fontSize = 14.sp,
