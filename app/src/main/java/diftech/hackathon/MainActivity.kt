@@ -5,17 +5,21 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
-import androidx.lifecycle.lifecycleScope
 import diftech.hackathon.data.model.Crypto
+import diftech.hackathon.data.repository.CoinCapCryptoRepository
+import diftech.hackathon.data.repository.CryptoCompareCryptoRepository
+import diftech.hackathon.data.repository.CryptoRepository
 import diftech.hackathon.data.repository.RemoteCryptoRepository
+import diftech.hackathon.data.repository.RepositoryFactory
 import diftech.hackathon.ui.screen.CryptoDetailScreen
 import diftech.hackathon.ui.screen.CryptoListScreen
 import diftech.hackathon.ui.theme.PlataHackhathonTheme
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     
-    private val repository = RemoteCryptoRepository()
+    // Используем фабрику для создания репозитория
+    // Чтобы изменить API - открой RepositoryFactory.kt и измени CURRENT_PROVIDER
+    private val repository = RepositoryFactory.createCryptoRepository()
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,12 +37,17 @@ class MainActivity : ComponentActivity() {
     
     override fun onDestroy() {
         super.onDestroy()
-        repository.close()
+        // Закрываем ресурсы репозитория
+        when (repository) {
+            is RemoteCryptoRepository -> repository.close()
+            is CoinCapCryptoRepository -> repository.close()
+            is CryptoCompareCryptoRepository -> repository.close()
+        }
     }
 }
 
 @Composable
-fun CryptoApp(repository: RemoteCryptoRepository) {
+fun CryptoApp(repository: CryptoRepository) {
     var selectedCrypto by remember { mutableStateOf<Crypto?>(null) }
     
     if (selectedCrypto == null) {

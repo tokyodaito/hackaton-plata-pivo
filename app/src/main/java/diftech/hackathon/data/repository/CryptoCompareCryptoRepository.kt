@@ -1,7 +1,7 @@
 package diftech.hackathon.data.repository
 
 import diftech.hackathon.data.model.Crypto
-import diftech.hackathon.data.remote.CoinGeckoApiService
+import diftech.hackathon.data.remote.CryptoCompareApiService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
-class RemoteCryptoRepository(
-    private val apiService: CoinGeckoApiService = CoinGeckoApiService()
+class CryptoCompareCryptoRepository(
+    private val apiService: CryptoCompareApiService = CryptoCompareApiService()
 ) : CryptoRepository {
     
     private val _cryptoListFlow = MutableStateFlow<List<Crypto>>(emptyList())
@@ -22,23 +22,28 @@ class RemoteCryptoRepository(
     private val scope = CoroutineScope(Dispatchers.IO)
     private var refreshJob: Job? = null
     
-    private val REFRESH_INTERVAL_MS = 10_000L // 30 секунд
+    private val REFRESH_INTERVAL_MS = 30_000L // 30 секунд
     
     override suspend fun getCryptoList(): List<Crypto> {
-        val marketData = apiService.getMarketData()
+        val response = apiService.getMultiPrice()
         
-        val cryptoList = marketData.map { dto ->
-            val priceHistory = dto.sparkline?.price?.takeLast(30) ?: emptyList()
+        val cryptoList = response?.raw?.map { (symbol, usdData) ->
+            val data = usdData.usd
+            val price = data.price
+            val changePercent = data.changePercent24Hour
+            
+            // Генерируем историю цен
+            val priceHistory = generatePriceHistory(price, changePercent)
             
             Crypto(
-                id = dto.id,
-                name = dto.name,
-                symbol = dto.symbol.uppercase(),
-                currentPrice = dto.currentPrice,
-                priceChangePercent24h = dto.priceChangePercent24h ?: 0.0,
-                priceHistory = if (priceHistory.isNotEmpty()) priceHistory else generateFallbackHistory(dto.currentPrice)
+                id = symbol.lowercase(),
+                name = apiService.getCryptoName(symbol),
+                symbol = symbol,
+                currentPrice = price,
+                priceChangePercent24h = changePercent,
+                priceHistory = priceHistory
             )
-        }
+        } ?: emptyList()
         
         _cryptoListFlow.value = cryptoList
         return cryptoList
@@ -73,13 +78,19 @@ class RemoteCryptoRepository(
         refreshJob = null
     }
     
-    private fun generateFallbackHistory(basePrice: Double): List<Double> {
+    private fun generatePriceHistory(currentPrice: Double, changePercent24h: Double): List<Double> {
         val history = mutableListOf<Double>()
-        var currentPrice = basePrice * Random.nextDouble(0.9, 1.0)
         
-        repeat(30) {
-            history.add(currentPrice)
-            currentPrice *= Random.nextDouble(0.98, 1.02)
+        // Начальная цена 24 часа назад
+        val startPrice = currentPrice / (1 + changePercent24h / 100)
+        val priceRange = currentPrice - startPrice
+        
+        // Генерируем 30 точек от начальной до текущей цены
+        for (i in 0..29) {
+            val progress = i / 29.0
+            val randomFactor = Random.nextDouble(0.98, 1.02)
+            val price = (startPrice + priceRange * progress) * randomFactor
+            history.add(price)
         }
         
         return history
