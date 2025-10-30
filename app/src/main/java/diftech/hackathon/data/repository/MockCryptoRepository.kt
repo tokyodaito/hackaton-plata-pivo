@@ -1,0 +1,62 @@
+package diftech.hackathon.data.repository
+
+import diftech.hackathon.data.model.Crypto
+import kotlinx.coroutines.delay
+import kotlin.random.Random
+
+class MockCryptoRepository : CryptoRepository {
+    
+    private val cryptoList = listOf(
+        createMockCrypto("btc", "Bitcoin", "BTC", 67000.0),
+        createMockCrypto("eth", "Ethereum", "ETH", 3400.0),
+        createMockCrypto("bnb", "Binance Coin", "BNB", 580.0),
+        createMockCrypto("sol", "Solana", "SOL", 145.0),
+        createMockCrypto("xrp", "Ripple", "XRP", 0.52),
+        createMockCrypto("ada", "Cardano", "ADA", 0.45),
+        createMockCrypto("doge", "Dogecoin", "DOGE", 0.15),
+        createMockCrypto("dot", "Polkadot", "DOT", 6.8),
+        createMockCrypto("matic", "Polygon", "MATIC", 0.85),
+        createMockCrypto("link", "Chainlink", "LINK", 14.5)
+    )
+    
+    override suspend fun getCryptoList(): List<Crypto> {
+        delay(300) // имитация сетевого запроса
+        return cryptoList
+    }
+    
+    override suspend fun getCryptoById(id: String): Crypto? {
+        delay(200)
+        return cryptoList.find { it.id == id }
+    }
+    
+    override suspend fun getRecommendation(crypto: Crypto): String {
+        // TODO: здесь будет реальная логика
+        return if (Random.nextBoolean()) "ДО-ДЭП" else "Не трогать"
+    }
+    
+    private fun createMockCrypto(id: String, name: String, symbol: String, basePrice: Double): Crypto {
+        val priceHistory = generatePriceHistory(basePrice, 30)
+        val changePercent = ((priceHistory.last() - priceHistory.first()) / priceHistory.first()) * 100
+        
+        return Crypto(
+            id = id,
+            name = name,
+            symbol = symbol,
+            currentPrice = priceHistory.last(),
+            priceChangePercent24h = changePercent,
+            priceHistory = priceHistory
+        )
+    }
+    
+    private fun generatePriceHistory(basePrice: Double, points: Int): List<Double> {
+        val history = mutableListOf<Double>()
+        var currentPrice = basePrice * Random.nextDouble(0.9, 1.1)
+        
+        repeat(points) {
+            history.add(currentPrice)
+            currentPrice *= Random.nextDouble(0.95, 1.05)
+        }
+        
+        return history
+    }
+}

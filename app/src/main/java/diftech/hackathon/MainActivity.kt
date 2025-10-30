@@ -4,13 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.*
+import diftech.hackathon.data.model.Crypto
+import diftech.hackathon.data.repository.MockCryptoRepository
+import diftech.hackathon.ui.screen.CryptoDetailScreen
+import diftech.hackathon.ui.screen.CryptoListScreen
 import diftech.hackathon.ui.theme.PlataHackhathonTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,29 +17,31 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PlataHackhathonTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                CryptoApp()
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    PlataHackhathonTheme {
-        Greeting("Android")
+fun CryptoApp() {
+    var selectedCrypto by remember { mutableStateOf<Crypto?>(null) }
+    val repository = remember { MockCryptoRepository() }
+    
+    if (selectedCrypto == null) {
+        CryptoListScreen(
+            repository = repository,
+            onCryptoClick = { crypto ->
+                selectedCrypto = crypto
+            }
+        )
+    } else {
+        CryptoDetailScreen(
+            crypto = selectedCrypto!!,
+            repository = repository,
+            onBackClick = {
+                selectedCrypto = null
+            }
+        )
     }
 }
