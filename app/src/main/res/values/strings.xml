@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">PlataHackhathon</string>
+    <string name="main_screen_placeholder">Подготовка приложения в процессе</string>
 </resources>
