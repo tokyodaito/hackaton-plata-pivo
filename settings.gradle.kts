@@ -1,3 +1,11 @@
+import java.nio.file.Files
+import java.nio.file.Paths
+
+System.getenv("JAVA_HOME")
+    ?.let { Paths.get(it) }
+    ?.takeIf { Files.exists(it.resolve("bin").resolve("jlink")) }
+    ?.let { System.setProperty("org.gradle.java.home", it.toString()) }
+
 pluginManagement {
     repositories {
         google {
