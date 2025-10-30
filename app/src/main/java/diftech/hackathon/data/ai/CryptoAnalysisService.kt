@@ -1,26 +1,36 @@
 package diftech.hackathon.data.ai
 
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import android.content.Context
-import com.aallam.openai.api.chat.ChatCompletion
-import com.aallam.openai.api.chat.ChatCompletionRequest
-import com.aallam.openai.api.chat.ChatMessage
-import com.aallam.openai.api.chat.ChatRole
-import com.aallam.openai.api.model.ModelId
-import com.aallam.openai.client.OpenAI
 import diftech.hackathon.data.config.ApiConfig
 import diftech.hackathon.data.model.Crypto
 
 /**
- * Service for analyzing cryptocurrency using OpenAI API
+ * Service for analyzing cryptocurrency using Koog AI Agent Framework
  * Provides buy/sell recommendations based on current market data
  */
 class CryptoAnalysisService(private val context: Context? = null) {
-    
-    private var openAI: OpenAI? = null
-    
+
+    private var agent: AIAgent<String, String>? = null
+
     init {
         if (ApiConfig.isOpenAiKeyConfigured()) {
-            openAI = OpenAI(ApiConfig.getOpenAiKey())
+            agent = AIAgent(
+                promptExecutor = simpleOpenAIExecutor(ApiConfig.getOpenAiKey()),
+                systemPrompt = """
+                    You are a cryptocurrency expert and financial analyst.
+                    Your task is to provide brief buy/sell recommendations for cryptocurrencies.
+
+                    Respond STRICTLY with one of two options:
+                    - "BUY NOW" - if you recommend buying
+                    - "DON'T TOUCH" - if you DON'T recommend buying (sell or stay away)
+
+                    Your response must contain ONLY one of these phrases, without additional explanations.
+                """.trimIndent(),
+                llmModel = OpenAIModels.Chat.GPT4o
+            )
         }
     }
     
@@ -30,48 +40,21 @@ class CryptoAnalysisService(private val context: Context? = null) {
      * @return "BUY NOW" or "DON'T TOUCH"
      */
     suspend fun getRecommendation(crypto: Crypto): String {
-        if (openAI == null) {
+        if (agent == null) {
             return "⚠️ OpenAI API not configured. Add key to config.properties"
         }
-        
+
         return try {
             val prompt = loadPromptTemplate(crypto)
-            
-            val chatCompletionRequest = ChatCompletionRequest(
-                model = ModelId("gpt-4o-mini"),
-                messages = listOf(
-                    ChatMessage(
-                        role = ChatRole.System,
-                        content = """
-                            You are a cryptocurrency expert and financial analyst.
-                            Your task is to provide brief buy/sell recommendations for cryptocurrencies.
-                            
-                            Respond STRICTLY with one of two options:
-                            - "BUY NOW" - if you recommend buying
-                            - "DON'T TOUCH" - if you DON'T recommend buying (sell or stay away)
-                            
-                            Your response must contain ONLY one of these phrases, without additional explanations.
-                        """.trimIndent()
-                    ),
-                    ChatMessage(
-                        role = ChatRole.User,
-                        content = prompt
-                    )
-                ),
-                temperature = 0.7,
-                maxTokens = 50
-            )
-            
-            val completion: ChatCompletion = openAI!!.chatCompletion(chatCompletionRequest)
-            val response = completion.choices.firstOrNull()?.message?.content ?: "DON'T TOUCH"
-            
+            val response = agent!!.run(prompt)
+
             // Normalize response
             when {
-                response.contains("BUY NOW", ignoreCase = true) || 
+                response.contains("BUY NOW", ignoreCase = true) ||
                 response.contains("BUY", ignoreCase = true) -> "BUY NOW"
                 else -> "DON'T TOUCH"
             }
-            
+
         } catch (e: Exception) {
             e.printStackTrace()
             "❌ Error: ${e.message}"
@@ -139,6 +122,6 @@ class CryptoAnalysisService(private val context: Context? = null) {
     }
     
     fun close() {
-        // OpenAI client doesn't require explicit closing
+        // Koog AIAgent doesn't require explicit closing
     }
 }

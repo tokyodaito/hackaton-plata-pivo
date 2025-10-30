@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    kotlin("plugin.serialization") version "1.9.22"
+    kotlin("plugin.serialization") version "2.2.0"
 }
 
 android {
@@ -36,6 +36,18 @@ android {
         compose = true
         buildConfig = true
     }
+    packaging {
+        resources {
+            excludes += "/META-INF/INDEX.LIST"
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/io.netty.versions.properties"
+            excludes += "/META-INF/DEPENDENCIES"
+            excludes += "/META-INF/LICENSE"
+            excludes += "/META-INF/LICENSE.txt"
+            excludes += "/META-INF/NOTICE"
+            excludes += "/META-INF/NOTICE.txt"
+        }
+    }
 }
 
 dependencies {
@@ -50,19 +62,19 @@ dependencies {
     implementation(libs.androidx.material3)
     
     // Ktor
-    implementation("io.ktor:ktor-client-core:2.3.7")
-    implementation("io.ktor:ktor-client-android:2.3.7")
-    implementation("io.ktor:ktor-client-content-negotiation:2.3.7")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
-    implementation("io.ktor:ktor-client-logging:2.3.7")
-    implementation("io.ktor:ktor-client-auth:2.3.7")
+    implementation("io.ktor:ktor-client-core:3.0.2")
+    implementation("io.ktor:ktor-client-android:3.0.2")
+    implementation("io.ktor:ktor-client-content-negotiation:3.0.2")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.2")
+    implementation("io.ktor:ktor-client-logging:3.0.2")
+    implementation("io.ktor:ktor-client-auth:3.0.2")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     
-    // Koog (OpenAI Client)
-    implementation("com.aallam.openai:openai-client:3.6.2")
-    implementation("io.ktor:ktor-client-okhttp:2.3.7")
+    // Koog AI Agent Framework
+    implementation("ai.koog:koog-agents:0.5.2")
+    implementation("io.ktor:ktor-client-okhttp:3.0.2")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
