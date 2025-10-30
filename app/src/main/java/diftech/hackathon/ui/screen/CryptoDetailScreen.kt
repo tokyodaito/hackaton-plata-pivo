@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import diftech.hackathon.data.model.Crypto
 import diftech.hackathon.data.repository.CryptoRepository
-import diftech.hackathon.data.repository.MockCryptoRepository
 import diftech.hackathon.ui.components.CryptoChart
 import diftech.hackathon.ui.components.DoDepLoadingOverlay
 import diftech.hackathon.ui.components.GlassButton
@@ -28,7 +27,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun CryptoDetailScreen(
     crypto: Crypto,
-    repository: CryptoRepository = MockCryptoRepository(),
+    repository: CryptoRepository,
     onBackClick: () -> Unit
 ) {
     var recommendation by remember { mutableStateOf<String?>(null) }
