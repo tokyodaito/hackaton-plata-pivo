@@ -1,0 +1,15 @@
+Analyze the cryptocurrency {CRYPTO_NAME} ({CRYPTO_SYMBOL}) and provide a recommendation.
+
+Current data:
+- Price: ${CURRENT_PRICE} ({PRICE_LEVEL})
+- 24-hour change: {TREND}
+- Dynamics: {DYNAMICS}
+
+Consider:
+1. Current news and market sentiment regarding {CRYPTO_NAME}
+2. Recommendations from major brokers and analysts
+3. Technical analysis and trends
+4. Fundamental indicators of the project
+5. Overall state of the cryptocurrency market
+
+Provide a recommendation: buy ("BUY NOW") or don't buy ("DON'T TOUCH")?

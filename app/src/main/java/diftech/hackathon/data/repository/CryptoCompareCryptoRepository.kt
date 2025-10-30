@@ -1,6 +1,8 @@
 package diftech.hackathon.data.repository
 
+import android.content.Context
 import diftech.hackathon.data.ai.CryptoAnalysisService
+import diftech.hackathon.data.config.ApiConfig
 import diftech.hackathon.data.model.Crypto
 import diftech.hackathon.data.remote.CryptoCompareApiService
 import kotlinx.coroutines.CoroutineScope
@@ -13,10 +15,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
+/**
+ * Repository for cryptocurrency data using CryptoCompare API
+ * Includes AI-powered analysis via OpenAI
+ */
 class CryptoCompareCryptoRepository(
-    private val apiService: CryptoCompareApiService = CryptoCompareApiService(),
-    private val analysisService: CryptoAnalysisService = CryptoAnalysisService()
+    private val apiService: CryptoCompareApiService = CryptoCompareApiService()
 ) : CryptoRepository {
+    
+    private val analysisService: CryptoAnalysisService by lazy {
+        CryptoAnalysisService(ApiConfig.getContext())
+    }
     
     private val _cryptoListFlow = MutableStateFlow<List<Crypto>>(emptyList())
     override val cryptoListFlow: StateFlow<List<Crypto>> = _cryptoListFlow.asStateFlow()
@@ -24,7 +33,7 @@ class CryptoCompareCryptoRepository(
     private val scope = CoroutineScope(Dispatchers.IO)
     private var refreshJob: Job? = null
     
-    private val REFRESH_INTERVAL_MS = 30_000L // 30 секунд
+    private val REFRESH_INTERVAL_MS = 30_000L // 30 seconds
     
     override suspend fun getCryptoList(): List<Crypto> {
         val response = apiService.getMultiPrice()
@@ -34,7 +43,7 @@ class CryptoCompareCryptoRepository(
             val price = data.price
             val changePercent = data.changePercent24Hour
             
-            // Генерируем историю цен
+            // Generate price history
             val priceHistory = generatePriceHistory(price, changePercent)
             
             Crypto(
@@ -82,11 +91,11 @@ class CryptoCompareCryptoRepository(
     private fun generatePriceHistory(currentPrice: Double, changePercent24h: Double): List<Double> {
         val history = mutableListOf<Double>()
         
-        // Начальная цена 24 часа назад
+        // Starting price 24 hours ago
         val startPrice = currentPrice / (1 + changePercent24h / 100)
         val priceRange = currentPrice - startPrice
         
-        // Генерируем 30 точек от начальной до текущей цены
+        // Generate 30 points from start to current price
         for (i in 0..29) {
             val progress = i / 29.0
             val randomFactor = Random.nextDouble(0.98, 1.02)

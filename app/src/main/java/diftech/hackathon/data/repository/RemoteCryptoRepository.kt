@@ -22,7 +22,7 @@ class RemoteCryptoRepository(
     private val scope = CoroutineScope(Dispatchers.IO)
     private var refreshJob: Job? = null
     
-    private val REFRESH_INTERVAL_MS = 10_000L // 30 секунд
+    private val REFRESH_INTERVAL_MS = 10_000L // 10 seconds
     
     override suspend fun getCryptoList(): List<Crypto> {
         val marketData = apiService.getMarketData()
@@ -49,8 +49,8 @@ class RemoteCryptoRepository(
     }
     
     override suspend fun getRecommendation(crypto: Crypto): String {
-        // TODO: здесь будет реальная логика
-        return if (Random.nextBoolean()) "ДО-ДЭП" else "Не трогать"
+        // TODO: implement real logic here
+        return if (Random.nextBoolean()) "BUY NOW" else "DON'T TOUCH"
     }
     
     override fun startAutoRefresh() {

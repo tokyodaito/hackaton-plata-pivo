@@ -30,7 +30,7 @@ class MockCryptoRepository : CryptoRepository {
     }
     
     override suspend fun getCryptoList(): List<Crypto> {
-        delay(300) // имитация сетевого запроса
+        delay(300) // Simulate network request
         return cryptoList
     }
     
@@ -40,16 +40,16 @@ class MockCryptoRepository : CryptoRepository {
     }
     
     override suspend fun getRecommendation(crypto: Crypto): String {
-        // TODO: здесь будет реальная логика
-        return if (Random.nextBoolean()) "ДО-ДЭП" else "Не трогать"
+        // TODO: implement real logic here
+        return if (Random.nextBoolean()) "BUY NOW" else "DON'T TOUCH"
     }
     
     override fun startAutoRefresh() {
-        // Mock repository не нуждается в авто-обновлении
+        // Mock repository doesn't need auto-refresh
     }
     
     override fun stopAutoRefresh() {
-        // Mock repository не нуждается в авто-обновлении
+        // Mock repository doesn't need auto-refresh
     }
     
     private fun createMockCrypto(id: String, name: String, symbol: String, basePrice: Double): Crypto {

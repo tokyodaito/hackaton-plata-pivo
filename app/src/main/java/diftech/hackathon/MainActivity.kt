@@ -18,18 +18,18 @@ import diftech.hackathon.ui.theme.PlataHackhathonTheme
 
 class MainActivity : ComponentActivity() {
     
-    // Используем фабрику для создания репозитория
-    // Чтобы изменить API - открой RepositoryFactory.kt и измени CURRENT_PROVIDER
+    // Use factory to create repository
+    // To change API - open RepositoryFactory.kt and change CURRENT_PROVIDER
     private val repository = RepositoryFactory.createCryptoRepository()
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
-        // Инициализируем конфигурацию (загружаем OpenAI API ключ)
+        // Initialize configuration (load OpenAI API key)
         ApiConfig.init(applicationContext)
         
-        // Запускаем автообновление данных
+        // Start auto-refresh for data
         repository.startAutoRefresh()
         
         setContent {
@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
     
     override fun onDestroy() {
         super.onDestroy()
-        // Закрываем ресурсы репозитория
+        // Close repository resources
         when (repository) {
             is RemoteCryptoRepository -> repository.close()
             is CoinCapCryptoRepository -> repository.close()
