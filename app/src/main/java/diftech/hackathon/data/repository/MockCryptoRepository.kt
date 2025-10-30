@@ -2,9 +2,15 @@ package diftech.hackathon.data.repository
 
 import diftech.hackathon.data.model.Crypto
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlin.random.Random
 
 class MockCryptoRepository : CryptoRepository {
+    
+    private val _cryptoListFlow = MutableStateFlow<List<Crypto>>(emptyList())
+    override val cryptoListFlow: StateFlow<List<Crypto>> = _cryptoListFlow.asStateFlow()
     
     private val cryptoList = listOf(
         createMockCrypto("btc", "Bitcoin", "BTC", 67000.0),
@@ -19,6 +25,10 @@ class MockCryptoRepository : CryptoRepository {
         createMockCrypto("link", "Chainlink", "LINK", 14.5)
     )
     
+    init {
+        _cryptoListFlow.value = cryptoList
+    }
+    
     override suspend fun getCryptoList(): List<Crypto> {
         delay(300) // имитация сетевого запроса
         return cryptoList
@@ -32,6 +42,14 @@ class MockCryptoRepository : CryptoRepository {
     override suspend fun getRecommendation(crypto: Crypto): String {
         // TODO: здесь будет реальная логика
         return if (Random.nextBoolean()) "ДО-ДЭП" else "Не трогать"
+    }
+    
+    override fun startAutoRefresh() {
+        // Mock repository не нуждается в авто-обновлении
+    }
+    
+    override fun stopAutoRefresh() {
+        // Mock repository не нуждается в авто-обновлении
     }
     
     private fun createMockCrypto(id: String, name: String, symbol: String, basePrice: Double): Crypto {

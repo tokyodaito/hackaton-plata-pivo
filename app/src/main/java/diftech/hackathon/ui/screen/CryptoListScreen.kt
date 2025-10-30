@@ -25,13 +25,13 @@ fun CryptoListScreen(
     repository: CryptoRepository = MockCryptoRepository(),
     onCryptoClick: (Crypto) -> Unit
 ) {
-    var cryptoList by remember { mutableStateOf<List<Crypto>>(emptyList()) }
+    val cryptoList by repository.cryptoListFlow.collectAsState()
     var isLoading by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
     
     LaunchedEffect(Unit) {
         scope.launch {
-            cryptoList = repository.getCryptoList()
+            repository.getCryptoList()
             isLoading = false
         }
     }
@@ -43,7 +43,7 @@ fun CryptoListScreen(
             )
         }
     ) { padding ->
-        if (isLoading) {
+        if (isLoading && cryptoList.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
