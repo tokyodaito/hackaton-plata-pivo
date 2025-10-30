@@ -1,5 +1,6 @@
 package diftech.hackathon.data.repository
 
+import diftech.hackathon.data.ai.CryptoAnalysisService
 import diftech.hackathon.data.model.Crypto
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,9 +40,16 @@ class MockCryptoRepository : CryptoRepository {
         return cryptoList.find { it.id == id }
     }
     
-    override suspend fun getRecommendation(crypto: Crypto): String {
-        // TODO: implement real logic here
-        return if (Random.nextBoolean()) "BUY NOW" else "DON'T TOUCH"
+    override suspend fun getRecommendation(crypto: Crypto): CryptoAnalysisService.RecommendationResult {
+        delay(500)
+        val isBuy = Random.nextBoolean()
+        return CryptoAnalysisService.RecommendationResult(
+            shortRecommendation = if (isBuy) "BUY" else "DON'T TOUCH",
+            detailedRecommendation = if (isBuy)
+                "Mock analysis suggests positive market momentum with favorable technical indicators."
+            else
+                "Mock analysis indicates caution due to current market conditions and volatility."
+        )
     }
     
     override fun startAutoRefresh() {

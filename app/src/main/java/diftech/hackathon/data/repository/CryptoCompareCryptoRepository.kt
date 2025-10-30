@@ -64,7 +64,7 @@ class CryptoCompareCryptoRepository(
         return _cryptoListFlow.value.find { it.id == id }
     }
     
-    override suspend fun getRecommendation(crypto: Crypto): String {
+    override suspend fun getRecommendation(crypto: Crypto): CryptoAnalysisService.RecommendationResult {
         return analysisService.getRecommendation(crypto)
     }
     

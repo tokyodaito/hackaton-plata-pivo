@@ -6,5 +6,7 @@ data class Crypto(
     val symbol: String,
     val currentPrice: Double,
     val priceChangePercent24h: Double,
-    val priceHistory: List<Double>
+    val priceHistory: List<Double>,
+    val aiRecommendation: String? = null,
+    val aiRecommendationDetails: String? = null
 )

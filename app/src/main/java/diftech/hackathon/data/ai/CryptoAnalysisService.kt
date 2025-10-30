@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import android.content.Context
+import android.util.Log
 import diftech.hackathon.data.config.ApiConfig
 import diftech.hackathon.data.model.Crypto
 
@@ -13,52 +14,96 @@ import diftech.hackathon.data.model.Crypto
  */
 class CryptoAnalysisService(private val context: Context? = null) {
 
-    private var agent: AIAgent<String, String>? = null
+    private val systemPrompt = """
+        You are a cryptocurrency expert and financial analyst.
+        Your task is to provide buy/sell recommendations for cryptocurrencies.
 
-    init {
-        if (ApiConfig.isOpenAiKeyConfigured()) {
-            agent = AIAgent(
-                promptExecutor = simpleOpenAIExecutor(ApiConfig.getOpenAiKey()),
-                systemPrompt = """
-                    You are a cryptocurrency expert and financial analyst.
-                    Your task is to provide brief buy/sell recommendations for cryptocurrencies.
+        Your response MUST follow this exact format:
+        RECOMMENDATION: [BUY or DON'T TOUCH]
+        DETAILS: [2-3 sentences explaining the reasoning behind your recommendation, including market trends, technical indicators, and key factors]
 
-                    Respond STRICTLY with one of two options:
-                    - "BUY NOW" - if you recommend buying
-                    - "DON'T TOUCH" - if you DON'T recommend buying (sell or stay away)
+        Example:
+        RECOMMENDATION: BUY
+        DETAILS: Bitcoin is showing strong bullish momentum with increasing institutional adoption. The recent price consolidation above $60K indicates solid support levels. Major analysts predict continued growth in Q4 2024.
 
-                    Your response must contain ONLY one of these phrases, without additional explanations.
-                """.trimIndent(),
-                llmModel = OpenAIModels.Chat.GPT4o
-            )
-        }
+        Always start with "RECOMMENDATION:" followed by either "BUY" or "DON'T TOUCH", then on a new line "DETAILS:" with your analysis.
+    """.trimIndent()
+
+    /**
+     * Create a new AIAgent instance for each request
+     * This prevents "Agent was already started" errors
+     */
+    private fun createAgent(): AIAgent<String, String> {
+        return AIAgent(
+            promptExecutor = simpleOpenAIExecutor(ApiConfig.getOpenAiKey()),
+            systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.Chat.GPT4o
+        )
     }
     
+    data class RecommendationResult(
+        val shortRecommendation: String,
+        val detailedRecommendation: String
+    )
+
     /**
      * Get AI-powered recommendation for a cryptocurrency
      * @param crypto The cryptocurrency to analyze
-     * @return "BUY NOW" or "DON'T TOUCH"
+     * @return RecommendationResult with short and detailed recommendations
      */
-    suspend fun getRecommendation(crypto: Crypto): String {
-        if (agent == null) {
-            return "⚠️ OpenAI API not configured. Add key to config.properties"
+    suspend fun getRecommendation(crypto: Crypto): RecommendationResult {
+        if (!ApiConfig.isOpenAiKeyConfigured()) {
+            return RecommendationResult(
+                shortRecommendation = "⚠️ API not configured",
+                detailedRecommendation = "OpenAI API not configured. Add key to config.properties"
+            )
         }
 
         return try {
             val prompt = loadPromptTemplate(crypto)
-            val response = agent!!.run(prompt)
+            Log.d(TAG, "📤 Sending prompt to Koog AI:\n$prompt")
 
-            // Normalize response
-            when {
-                response.contains("BUY NOW", ignoreCase = true) ||
-                response.contains("BUY", ignoreCase = true) -> "BUY NOW"
+            // Create a fresh agent for each request to avoid "Agent was already started" error
+            val agent = createAgent()
+            val response = agent.run(prompt)
+            Log.d(TAG, "📥 Koog AI response:\n$response")
+
+            // Parse the response
+            val recommendationLine = response.lines()
+                .firstOrNull { it.startsWith("RECOMMENDATION:", ignoreCase = true) }
+                ?.substringAfter("RECOMMENDATION:", "")
+                ?.trim() ?: ""
+
+            val detailsLine = response.lines()
+                .firstOrNull { it.startsWith("DETAILS:", ignoreCase = true) }
+                ?.substringAfter("DETAILS:", "")
+                ?.trim() ?: response
+
+            // Normalize short recommendation
+            val shortRec = when {
+                recommendationLine.contains("BUY", ignoreCase = true) -> "BUY"
                 else -> "DON'T TOUCH"
             }
 
+            Log.d(TAG, "✅ Short: $shortRec | Details: $detailsLine")
+
+            RecommendationResult(
+                shortRecommendation = shortRec,
+                detailedRecommendation = detailsLine
+            )
+
         } catch (e: Exception) {
+            Log.e(TAG, "❌ Error getting recommendation", e)
             e.printStackTrace()
-            "❌ Error: ${e.message}"
+            RecommendationResult(
+                shortRecommendation = "❌ Error",
+                detailedRecommendation = e.message ?: "Unknown error occurred"
+            )
         }
+    }
+
+    companion object {
+        private const val TAG = "CryptoAnalysisService"
     }
     
     /**

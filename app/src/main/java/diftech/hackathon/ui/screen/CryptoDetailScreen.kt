@@ -30,7 +30,8 @@ fun CryptoDetailScreen(
     repository: CryptoRepository,
     onBackClick: () -> Unit
 ) {
-    var recommendation by remember { mutableStateOf<String?>(null) }
+    var shortRecommendation by remember { mutableStateOf<String?>(null) }
+    var detailedRecommendation by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     
@@ -158,7 +159,9 @@ fun CryptoDetailScreen(
                                 onClick = {
                                     isLoading = true
                                     scope.launch {
-                                        recommendation = repository.getRecommendation(crypto)
+                                        val result = repository.getRecommendation(crypto)
+                                        shortRecommendation = result.shortRecommendation
+                                        detailedRecommendation = result.detailedRecommendation
                                         isLoading = false
                                     }
                                 }
@@ -183,7 +186,7 @@ fun CryptoDetailScreen(
                         }
                     }
 
-                    if (recommendation != null) {
+                    if (shortRecommendation != null) {
                         GlassCard(
                             modifier = Modifier.fillMaxWidth(),
                             cornerRadius = 28.dp,
@@ -192,20 +195,36 @@ fun CryptoDetailScreen(
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 Text(
-                                    text = "Рекомендация",
+                                    text = "AI Рекомендация",
                                     color = Color.White.copy(alpha = 0.7f),
                                     fontSize = 16.sp
                                 )
                                 Text(
-                                    text = recommendation!!,
+                                    text = shortRecommendation!!,
                                     fontSize = 28.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (recommendation == "ДО-ДЭП")
+                                    color = if (shortRecommendation == "BUY")
                                         Color(0xFF5AF78E) else Color(0xFFFFC86B)
                                 )
+
+                                if (detailedRecommendation != null) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Детали:",
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = detailedRecommendation!!,
+                                        color = Color.White.copy(alpha = 0.85f),
+                                        fontSize = 14.sp,
+                                        lineHeight = 20.sp
+                                    )
+                                }
                             }
                         }
                     }
