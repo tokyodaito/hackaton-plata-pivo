@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,7 +45,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.withFrameNanos
+import androidx.compose.runtime.withFrameNanos
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -95,7 +96,7 @@ fun GlassCard(
     modifier: Modifier = Modifier,
     cornerRadius: Dp = 26.dp,
     contentPadding: PaddingValues = PaddingValues(20.dp),
-    content: @Composable Column.() -> Unit
+    content: @Composable ColumnScope.() -> Unit
 ) {
     val shape = RoundedCornerShape(cornerRadius)
     Column(
@@ -126,10 +127,9 @@ fun GlassCard(
                     alpha = 0.4f
                 )
             }
-            .padding(contentPadding)
-    ) {
-        content()
-    }
+            .padding(contentPadding),
+        content = content
+    )
 }
 
 @Composable
