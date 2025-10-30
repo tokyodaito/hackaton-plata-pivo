@@ -14,26 +14,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import diftech.hackathon.data.model.Crypto
 import diftech.hackathon.data.repository.CryptoRepository
-import diftech.hackathon.data.repository.MockCryptoRepository
 import diftech.hackathon.ui.components.GlassCard
 import diftech.hackathon.ui.components.LiquidGlassBackground
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CryptoListScreen(
-    repository: CryptoRepository = MockCryptoRepository(),
+    repository: CryptoRepository,
     onCryptoClick: (Crypto) -> Unit
 ) {
-    var cryptoList by remember { mutableStateOf<List<Crypto>>(emptyList()) }
+    val cryptoList by repository.cryptoListFlow.collectAsState()
     var isLoading by remember { mutableStateOf(true) }
-    val scope = rememberCoroutineScope()
-    
+
     LaunchedEffect(Unit) {
-        scope.launch {
-            cryptoList = repository.getCryptoList()
-            isLoading = false
-        }
+        runCatching { repository.getCryptoList() }
+            .onFailure { it.printStackTrace() }
+        isLoading = false
     }
     
     LiquidGlassBackground {
@@ -65,6 +61,19 @@ fun CryptoListScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = Color.White.copy(alpha = 0.8f))
+                }
+            } else if (cryptoList.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Не удалось загрузить данные",
+                        color = Color.White.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             } else {
                 LazyColumn(
