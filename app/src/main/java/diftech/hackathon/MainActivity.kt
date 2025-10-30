@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
+import diftech.hackathon.data.config.ApiConfig
 import diftech.hackathon.data.model.Crypto
 import diftech.hackathon.data.repository.CoinCapCryptoRepository
 import diftech.hackathon.data.repository.CryptoCompareCryptoRepository
@@ -24,6 +25,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        // Инициализируем конфигурацию (загружаем OpenAI API ключ)
+        ApiConfig.init(applicationContext)
         
         // Запускаем автообновление данных
         repository.startAutoRefresh()

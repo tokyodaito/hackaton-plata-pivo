@@ -1,5 +1,6 @@
 package diftech.hackathon.data.repository
 
+import diftech.hackathon.data.ai.CryptoAnalysisService
 import diftech.hackathon.data.model.Crypto
 import diftech.hackathon.data.remote.CryptoCompareApiService
 import kotlinx.coroutines.CoroutineScope
@@ -13,7 +14,8 @@ import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 class CryptoCompareCryptoRepository(
-    private val apiService: CryptoCompareApiService = CryptoCompareApiService()
+    private val apiService: CryptoCompareApiService = CryptoCompareApiService(),
+    private val analysisService: CryptoAnalysisService = CryptoAnalysisService()
 ) : CryptoRepository {
     
     private val _cryptoListFlow = MutableStateFlow<List<Crypto>>(emptyList())
@@ -54,8 +56,7 @@ class CryptoCompareCryptoRepository(
     }
     
     override suspend fun getRecommendation(crypto: Crypto): String {
-        // TODO: здесь будет реальная логика
-        return if (Random.nextBoolean()) "ДО-ДЭП" else "Не трогать"
+        return analysisService.getRecommendation(crypto)
     }
     
     override fun startAutoRefresh() {
@@ -99,5 +100,6 @@ class CryptoCompareCryptoRepository(
     fun close() {
         stopAutoRefresh()
         apiService.close()
+        analysisService.close()
     }
 }
